@@ -92,17 +92,67 @@ fn day_1_2(input: &str) -> i32{
     result
 }
 
-fn day_2_1(input: &str) -> i32{
-    let result = 0;
-    let guesses: Vec<Vec<&str>> = input.lines().map(|s| s.split(';').collect()).collect();
-    for e in guesses{
-        guesses.get(0)
+fn day_2_1(input: &str,cube_count: &HashMap<&str, i32>) -> i32{
+    let mut result = 0;
+    'line_loop: for l in input.lines(){
+        let game_substr: Vec<&str> = l.split(':').collect();
+        let game_title: String = game_substr[0]
+            .chars()
+            .filter(|c| c.is_numeric())
+            .collect();
+        let game_no: i32 = game_title.parse().unwrap();
+        println!("{}", game_no);
+        let grabs: Vec<&str> = game_substr[1].split(&[';',','][..]).collect();
+        for g in grabs{
+            let val_col: Vec<&str> = g.split(' ').collect();
+            // need to compare the value of the grab to the cube count of a given color and reject the game
+            // if the value exceeds the value in cube_count.
+            let g_val: &i32 = &val_col[1].parse().unwrap();
+            if let Some(val) = cube_count.get(&val_col[2]){
+                if g_val > val{
+                    println!("Game is no good! {}",l);
+                    continue 'line_loop
+                }
+            }
+            else{
+                println!("Weird result for {}", g);
+            }
+        }
+        result += game_no;    
     }
     result
+}
+
+fn day_2_2(input: &str) -> i32{
+    let mut result = 0;
+    for l in input.lines(){
+        let mut rgb = HashMap::from([
+            ("red",0),
+            ("green",0),
+            ("blue",0)
+        ]);
+        let game_substr: Vec<&str> = l.split(':').collect();
+        let grabs: Vec<&str> = game_substr[1].split(&[';',','][..]).collect();
+        for g in grabs{
+            let val_col: Vec<&str> = g.split(' ').collect();
+            let g_val: &i32 = &val_col[1].parse().unwrap();
+            if let Some(val) = rgb.get(&val_col[2]){
+                if *val == 0 || *val < *g_val{
+                    rgb.insert(&val_col[2],*g_val);
+                }
+            }
+        }
+        result += rgb.values().product::<i32>();
+        dbg!(&result,&rgb,&l);
+
+
+        //result += red * green * blue;
+    }
+    result //answer is too low
 }
 fn main() {
     let input = fs::read_to_string("src/input_2.txt")
         .expect("unable to read file");
-    day_2_1(&input);
-
+    let cube_count = HashMap::from([("red",12),("green",13),("blue",14)]);
+    println!("{:?}",day_2_2(&input));
 }
