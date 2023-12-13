@@ -1,4 +1,4 @@
-use std::{fs, collections::HashMap};
+use std::{fs, collections::{HashMap, btree_map::Range}};
 use regex::Regex;
 
 fn day_1_1(input: &str) -> i32{
@@ -150,17 +150,23 @@ fn day_2_2(input: &str) -> i32{
 // collect coordinates for each symbol and number, as well as the length of the number. 
 // For each number, check a set of coordinates for the existence of a symbol. 
 // (say coordinates for the number are r,c with l=3. you would then check [r-1][c-1:c+1],[r][c-1,c+1],[r+1][c-1:c+1])
-fn day_3_1(input: &str) -> i32 {
+fn day_3_1_and_2(input: &str) -> (i32,i32) {
     let mut result = 0;
+    let mut result_2 = 0;
     let d_pattern = Regex::new(r"\d+").unwrap();
     let schematic: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
     let mut symbol_coords:Vec<(usize,usize)> = vec![];
     let mut num_coords:Vec<(i32,usize,usize,usize)> = vec![];
+    let mut coords_to_num:HashMap<(usize,usize),i32> = HashMap::new();
+    let mut gear_coords:Vec<(usize,usize)> = vec![];
 
-    for (l_no, line) in schematic.iter().enumerate(){
-        for (c_no, c) in line.iter().enumerate(){
+    for (line_no, line) in schematic.iter().enumerate(){
+        for (char_no, c) in line.iter().enumerate(){
             if !c.is_alphanumeric() && *c != '.'{
-                symbol_coords.push((l_no,c_no));
+                symbol_coords.push((line_no,char_no));
+            }
+            if *c == '*'{
+                gear_coords.push((line_no,char_no));
             }
         }
         let hay: String = line.iter().collect();
@@ -168,7 +174,17 @@ fn day_3_1(input: &str) -> i32 {
             let length = found.as_str().len();
             let index = found.start();
             let number = found.as_str().parse::<i32>().unwrap();
-            num_coords.push((number,l_no,index,length));
+            num_coords.push((number,line_no,index,length));
+            for i in index..index + length{
+                coords_to_num.insert((line_no,i),number);
+            }
+        }
+    }
+    let mut sorted_keys: Vec<_> = coords_to_num.keys().cloned().collect();
+    sorted_keys.sort();
+    for key in sorted_keys{
+        if let Some(value) = coords_to_num.get(&key) {
+            println!("{:?}: {}", key, value);
         }
     }
 
@@ -222,12 +238,87 @@ fn day_3_1(input: &str) -> i32 {
             }
         }
     }
-    result
+
+    for coords in gear_coords{
+        // println!("{:?}", coords);
+        let mut adj_numbers: Vec<i32> = vec![];
+        let line_no = coords.0;
+        let star_index = coords.1;
+        let mut prev_line: Option<&Vec<char>> = None;
+        let curr_line = schematic.get(line_no).unwrap();
+        let mut next_line: Option<&Vec<char>> = None;
+        if line_no != 0{
+            prev_line = schematic.get(line_no - 1);
+        }
+        if line_no != schematic.len(){
+            next_line = schematic.get(line_no + 1);
+        }
+        let l_index = if star_index > 0 {
+            star_index - 1
+        }
+        else{
+            star_index
+        };
+        let r_index = if star_index < curr_line.len(){
+            star_index + 2
+        }
+        else{
+            star_index + 1
+        };
+        if let Some(prev_line) = prev_line{
+            let trunc_prev_line = &prev_line[l_index..r_index];
+            println!("{:?}", trunc_prev_line);
+            for i in l_index..r_index{
+                if let Some(number) = coords_to_num.get(&(line_no - 1,i)){
+                    if ! adj_numbers.contains(number){
+                        adj_numbers.push(*number);
+                    }
+                }
+            }
+
+        }
+        let trunc_curr_line = &curr_line[l_index..r_index];
+        println!("{:?}", trunc_curr_line);
+        for i in l_index..r_index{
+            if let Some(number) = coords_to_num.get(&(line_no,i)){
+                if ! adj_numbers.contains(number){
+                    adj_numbers.push(*number);
+                }
+            }
+        }
+            // for c in trunc_curr_line{
+ 
+            //     // char_dump.push(*c);
+            // }
+
+        if let Some(next_line) = next_line{
+            let trunc_next_line = &next_line[l_index..r_index];
+            println!("{:?}", trunc_next_line);
+            for i in l_index..r_index{
+                if let Some(number) = coords_to_num.get(&(line_no + 1,i)){
+                    if ! adj_numbers.contains(number){
+                        adj_numbers.push(*number);
+                    }
+                }
+            }
+            // for c in trunc_next_line{
+            //     char_dump.push(*c);
+            // }
+        };
+        println!("{:?}",adj_numbers);
+        if adj_numbers.len() == 2{
+            result_2 += adj_numbers[0] * adj_numbers[1];
+        }
+        // println!();
+
+
+    }
+    (result,result_2)
 }
 
 fn main() {
     let input = fs::read_to_string("src/input_3.txt")
         .expect("unable to read file");
     //let cube_count = HashMap::from([("red",12),("green",13),("blue",14)]);
-    println!("{:?}",day_3_1(&input));
+    println!("{:?}",day_3_1_and_2(&input));
 }
