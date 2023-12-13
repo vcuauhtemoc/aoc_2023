@@ -1,4 +1,5 @@
 use std::{fs, collections::HashMap};
+use regex::Regex;
 
 fn day_1_1(input: &str) -> i32{
     let mut data = 0;
@@ -143,16 +144,90 @@ fn day_2_2(input: &str) -> i32{
             }
         }
         result += rgb.values().product::<i32>();
-        dbg!(&result,&rgb,&l);
-
-
-        //result += red * green * blue;
     }
-    result //answer is too low
+    result
 }
+// collect coordinates for each symbol and number, as well as the length of the number. 
+// For each number, check a set of coordinates for the existence of a symbol. 
+// (say coordinates for the number are r,c with l=3. you would then check [r-1][c-1:c+1],[r][c-1,c+1],[r+1][c-1:c+1])
+fn day_3_1(input: &str) -> i32 {
+    let mut result = 0;
+    let d_pattern = Regex::new(r"\d+").unwrap();
+    let schematic: Vec<Vec<char>> = input.lines().map(|line| line.chars().collect()).collect();
+    let mut symbol_coords:Vec<(usize,usize)> = vec![];
+    let mut num_coords:Vec<(i32,usize,usize,usize)> = vec![];
+
+    for (l_no, line) in schematic.iter().enumerate(){
+        for (c_no, c) in line.iter().enumerate(){
+            if !c.is_alphanumeric() && *c != '.'{
+                symbol_coords.push((l_no,c_no));
+            }
+        }
+        let hay: String = line.iter().collect();
+        for found in d_pattern.find_iter(&hay /*fuck*/){
+            let length = found.as_str().len();
+            let index = found.start();
+            let number = found.as_str().parse::<i32>().unwrap();
+            num_coords.push((number,l_no,index,length));
+        }
+    }
+
+    for coords in num_coords{
+        let mut char_dump:Vec<char> = vec![];
+        let number = coords.0;
+        let line_no = coords.1;
+        let n_index = coords.2;
+        let n_len = coords.3;
+        let mut prev_line: Option<&Vec<char>> = None;
+        let mut next_line: Option<&Vec<char>> = None;
+        if line_no != 0{
+            prev_line = schematic.get(line_no - 1);
+        }
+        let curr_line = schematic.get(line_no).unwrap(); 
+        if line_no != schematic.len(){
+            next_line = schematic.get(line_no + 1);
+        }
+        let l_index = if n_index > 0 {
+            n_index - 1
+        }
+        else{
+            n_index
+        };
+        let r_index = if n_index + n_len < curr_line.len(){
+            n_index + n_len + 1
+        }
+        else{
+            n_index + n_len
+        };
+        if let Some(prev_line) = prev_line{
+            let trunc_prev_line = &prev_line[l_index..r_index];
+            for c in trunc_prev_line{
+                char_dump.push(*c);
+            }
+        }
+        let trunc_curr_line = &curr_line[l_index..r_index];
+            for c in trunc_curr_line{
+                char_dump.push(*c);
+            }
+
+        if let Some(next_line) = next_line{
+            let trunc_next_line = &next_line[l_index..r_index];
+            for c in trunc_next_line{
+                char_dump.push(*c);
+            }
+        };
+        for c in char_dump{
+            if ! c.is_alphanumeric() && c != '.'{
+                result += number;
+            }
+        }
+    }
+    result
+}
+
 fn main() {
-    let input = fs::read_to_string("src/input_2.txt")
+    let input = fs::read_to_string("src/input_3.txt")
         .expect("unable to read file");
-    let cube_count = HashMap::from([("red",12),("green",13),("blue",14)]);
-    println!("{:?}",day_2_2(&input));
+    //let cube_count = HashMap::from([("red",12),("green",13),("blue",14)]);
+    println!("{:?}",day_3_1(&input));
 }
