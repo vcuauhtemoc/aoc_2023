@@ -180,13 +180,6 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
             }
         }
     }
-    let mut sorted_keys: Vec<_> = coords_to_num.keys().cloned().collect();
-    sorted_keys.sort();
-    for key in sorted_keys{
-        if let Some(value) = coords_to_num.get(&key) {
-            println!("{:?}: {}", key, value);
-        }
-    }
 
     for coords in num_coords{
         let mut char_dump:Vec<char> = vec![];
@@ -240,19 +233,12 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
     }
 
     for coords in gear_coords{
-        // println!("{:?}", coords);
         let mut adj_numbers: Vec<i32> = vec![];
         let line_no = coords.0;
         let star_index = coords.1;
         let mut prev_line: Option<&Vec<char>> = None;
         let curr_line = schematic.get(line_no).unwrap();
         let mut next_line: Option<&Vec<char>> = None;
-        if line_no != 0{
-            prev_line = schematic.get(line_no - 1);
-        }
-        if line_no != schematic.len(){
-            next_line = schematic.get(line_no + 1);
-        }
         let l_index = if star_index > 0 {
             star_index - 1
         }
@@ -265,9 +251,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
         else{
             star_index + 1
         };
-        if let Some(prev_line) = prev_line{
-            let trunc_prev_line = &prev_line[l_index..r_index];
-            println!("{:?}", trunc_prev_line);
+        if line_no != 0{
             for i in l_index..r_index{
                 if let Some(number) = coords_to_num.get(&(line_no - 1,i)){
                     if ! adj_numbers.contains(number){
@@ -275,10 +259,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
                     }
                 }
             }
-
         }
-        let trunc_curr_line = &curr_line[l_index..r_index];
-        println!("{:?}", trunc_curr_line);
         for i in l_index..r_index{
             if let Some(number) = coords_to_num.get(&(line_no,i)){
                 if ! adj_numbers.contains(number){
@@ -286,14 +267,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
                 }
             }
         }
-            // for c in trunc_curr_line{
- 
-            //     // char_dump.push(*c);
-            // }
-
-        if let Some(next_line) = next_line{
-            let trunc_next_line = &next_line[l_index..r_index];
-            println!("{:?}", trunc_next_line);
+        if line_no != schematic.len(){
             for i in l_index..r_index{
                 if let Some(number) = coords_to_num.get(&(line_no + 1,i)){
                     if ! adj_numbers.contains(number){
@@ -301,16 +275,11 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
                     }
                 }
             }
-            // for c in trunc_next_line{
-            //     char_dump.push(*c);
-            // }
-        };
-        println!("{:?}",adj_numbers);
+        }
+
         if adj_numbers.len() == 2{
             result_2 += adj_numbers[0] * adj_numbers[1];
         }
-        // println!();
-
 
     }
     (result,result_2)
