@@ -164,7 +164,7 @@ fn day_3_1(input: &str) -> i32 {
             }
         }
         let hay: String = line.iter().collect();
-        for found in d_pattern.find_iter(&hay /*fuck*/){
+        for found in d_pattern.find_iter(&hay){
             let length = found.as_str().len();
             let index = found.start();
             let number = found.as_str().parse::<i32>().unwrap();
