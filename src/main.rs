@@ -181,7 +181,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
         }
     }
 
-    for coords in num_coords{
+    'outer: for coords in num_coords{
         let mut char_dump:Vec<char> = vec![];
         let number = coords.0;
         let line_no = coords.1;
@@ -228,6 +228,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
         for c in char_dump{
             if ! c.is_alphanumeric() && c != '.'{
                 result += number;
+                break;
             }
         }
     }
@@ -236,9 +237,7 @@ fn day_3_1_and_2(input: &str) -> (i32,i32) {
         let mut adj_numbers: Vec<i32> = vec![];
         let line_no = coords.0;
         let star_index = coords.1;
-        let mut prev_line: Option<&Vec<char>> = None;
         let curr_line = schematic.get(line_no).unwrap();
-        let mut next_line: Option<&Vec<char>> = None;
         let l_index = if star_index > 0 {
             star_index - 1
         }
